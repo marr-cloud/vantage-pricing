@@ -1,0 +1,10 @@
+[
+  {
+    "instance_type": "m6g.large.search",
+    "vcpu": "2",
+    "memory": "8",
+    "pricing": {
+      "us-east-1": { "ondemand": 0.128, "reserved": { "yrTerm1Standard.noUpfront": 0.088, "yrTerm3Standard.noUpfront": 0.067 } }
+    }
+  }
+]

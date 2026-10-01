@@ -1,0 +1,10 @@
+[
+  {
+    "instance_type": "ra3.xlplus",
+    "vcpu": "4",
+    "memory": "32",
+    "pricing": {
+      "us-east-1": { "ondemand": 1.086, "reserved": { "yrTerm1Standard.noUpfront": 0.7602, "yrTerm3Standard.noUpfront": 0.4725 } }
+    }
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "instance_type": "db.m6g.large",
+    "vcpu": "2",
+    "memory": "8",
+    "pricing": {
+      "us-east-1": {
+        "2": { "ondemand": 0.152, "reserved": { "yrTerm1Standard.noUpfront": 0.0973 } },
+        "MySQL": { "ondemand": 0.152, "reserved": { "yrTerm1Standard.noUpfront": 0.0973, "yrTerm3Standard.partialUpfront": 0.06236438356164384 } },
+        "PostgreSQL": {
+          "ondemand": 0.159,
+          "reserved": {
+            "yrTerm1Standard.noUpfront": 0.1018,
+            "yrTerm1Standard.partialUpfront": 0.09701598173515982,
+            "yrTerm3Standard.partialUpfront": 0.0652103500761035
+          }
+        },
+        "PostgreSQL (on-premise for Outpost)": { "ondemand": 0.082, "reserved": {} }
+      }
+    }
+  },
+  {
+    "instance_type": "db.m6g.xlarge",
+    "vcpu": "4",
+    "memory": "16",
+    "pricing": {
+      "us-east-1": {
+        "PostgreSQL": { "ondemand": 0.318, "reserved": { "yrTerm1Standard.noUpfront": 0.2037, "yrTerm3Standard.partialUpfront": 0.13038264840182648 } }
+      }
+    }
+  }
+]

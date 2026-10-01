@@ -1,0 +1,13 @@
+[
+  {
+    "instance_type": "cache.m6g.large",
+    "vcpu": "2",
+    "memory": "6.38",
+    "pricing": {
+      "us-east-1": {
+        "Memcached": { "ondemand": 0.149, "reserved": { "yrTerm1Standard.noUpfront": 0.102, "yrTerm3Standard.noUpfront": 0.077 } },
+        "Redis": { "ondemand": 0.149, "reserved": { "yrTerm1Standard.noUpfront": 0.102, "yrTerm3Standard.noUpfront": 0.077 } }
+      }
+    }
+  }
+]

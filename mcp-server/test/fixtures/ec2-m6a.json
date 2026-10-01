@@ -1,0 +1,36 @@
+[
+  {
+    "instance_type": "m6a.2xlarge",
+    "vCPU": 8,
+    "memory": 32,
+    "pricing": {
+      "us-east-1": {
+        "linux": { "ondemand": "0.3456", "reserved": { "yrTerm1Standard.noUpfront": "0.22861", "yrTerm3Standard.noUpfront": "0.15676" } }
+      }
+    }
+  },
+  {
+    "instance_type": "m6a.xlarge",
+    "vCPU": 4,
+    "memory": 16,
+    "pricing": {
+      "us-east-1": {
+        "linux": {
+          "ondemand": "0.1728",
+          "reserved": {
+            "yrTerm1Savings.noUpfront": "0.13965",
+            "yrTerm1Standard.noUpfront": "0.11431",
+            "yrTerm1Standard.partialUpfront": "0.108882",
+            "yrTerm3Standard.noUpfront": "0.07838",
+            "yrTerm3Standard.partialUpfront": "0.072591"
+          }
+        },
+        "mswin": { "ondemand": "0.3568", "reserved": { "yrTerm1Standard.noUpfront": "0.29831", "yrTerm3Standard.noUpfront": "0.26238" } },
+        "emr": { "emr": "0.0432" }
+      },
+      "eu-west-1": {
+        "linux": { "ondemand": "0.1926", "reserved": { "yrTerm1Standard.noUpfront": "0.1274", "yrTerm3Standard.noUpfront": "0.08736" } }
+      }
+    }
+  }
+]
