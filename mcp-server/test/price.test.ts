@@ -74,7 +74,18 @@ describe("resolvePrice", () => {
 
   it("variante inexistente → NotFoundError con variantes válidas", () => {
     expect(() => resolvePrice("rds", pgLarge, "us-east-1", "Aurora")).toThrow(
-      new NotFoundError('Variante "Aurora" no existe para db.m6g.large en us-east-1. Variantes: MySQL, PostgreSQL.'),
+      new NotFoundError('Variante "Aurora" sin precio para db.m6g.large en us-east-1. Variantes con precio: MySQL, PostgreSQL.'),
+    );
+  });
+
+  it("variante con on-demand \"0\" no cuenta como disponible; el error sugiere las que tienen precio", () => {
+    const raw: RawInstance = {
+      instance_type: "u-6tb1.metal",
+      pricing: { "us-east-1": { linux: { ondemand: "0" }, dedicated: { ondemand: "1.5" }, mswin: { ondemand: "2" } } },
+    };
+    expect(variantsOf("ec2", raw, "us-east-1")).toEqual(["dedicated", "mswin"]);
+    expect(() => resolvePrice("ec2", raw, "us-east-1")).toThrow(
+      new NotFoundError('Variante "linux" sin precio para u-6tb1.metal en us-east-1. Variantes con precio: dedicated, mswin.'),
     );
   });
 

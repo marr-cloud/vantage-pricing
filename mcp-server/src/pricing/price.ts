@@ -48,12 +48,12 @@ export function regionsOf(raw: RawInstance): string[] {
 
 const hasVariants = (service: Service) => DEFAULT_VARIANT[service] !== null;
 
-/** Claves con precio on-demand propio (excluye recargos como emr/eks_auto_mode); en RDS además excluye códigos numéricos y Outpost. */
+/** Claves con precio on-demand positivo (excluye recargos como emr/eks_auto_mode); en RDS además excluye códigos numéricos y Outpost. */
 export function variantsOf(service: Service, raw: RawInstance, region: string): string[] {
   if (!hasVariants(service)) return [];
   const regionNode = asRecord(raw.pricing?.[region]) ?? {};
   return Object.keys(regionNode)
-    .filter((k) => asRecord(regionNode[k])?.ondemand !== undefined)
+    .filter((k) => positive(asRecord(regionNode[k])?.ondemand) !== null)
     .filter((k) => service !== "rds" || (!/^\d+$/.test(k) && !/outpost/i.test(k)))
     .sort();
 }
@@ -75,8 +75,11 @@ export function resolvePrice(service: Service, raw: RawInstance, region: string,
     const wanted = (variant ?? DEFAULT_VARIANT[service]!).toLowerCase();
     resolved = available.find((v) => v.toLowerCase() === wanted) ?? null;
     if (!resolved) {
+      const shown = variant ?? DEFAULT_VARIANT[service]!;
       throw new NotFoundError(
-        `Variante "${variant ?? DEFAULT_VARIANT[service]}" no existe para ${type} en ${region}. Variantes: ${available.join(", ")}.`,
+        available.length === 0
+          ? `${type} no tiene precio on-demand en ${region} (${shown}).`
+          : `Variante "${shown}" sin precio para ${type} en ${region}. Variantes con precio: ${available.join(", ")}.`,
       );
     }
     node = asRecord(regionNode[resolved]);

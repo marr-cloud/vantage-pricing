@@ -45,6 +45,8 @@ describe("MCP server", () => {
     expect(JSON.parse(text(ok)).sizes).toHaveLength(2);
     const bad = await mcp.callTool({ name: "list_family", arguments: { family: "m6a", region: "sa-east-1" } });
     expect(bad.isError).toBe(true);
-    expect(text(bad)).toBe("Ningún tamaño de m6a (ec2) tiene precio en sa-east-1 (linux).");
+    expect(text(bad)).toBe(
+      "Ningún tamaño de m6a (ec2) tiene precio en sa-east-1 (linux). Regiones disponibles: eu-west-1, us-east-1.",
+    );
   });
 });

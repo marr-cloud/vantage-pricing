@@ -1,6 +1,6 @@
 import { NotFoundError, PricingError } from "./errors.js";
 import { parseFamily, parseInstanceType } from "./parse.js";
-import { DEFAULT_VARIANT, reservedSummary, resolvePrice, specsOf, toCost } from "./price.js";
+import { DEFAULT_VARIANT, regionsOf, reservedSummary, resolvePrice, specsOf, toCost, variantsOf } from "./price.js";
 import type { Cost, ReservedCost, Service, Specs } from "./types.js";
 import type { VantageClient } from "./vantage.js";
 
@@ -121,8 +121,17 @@ export async function listFamily(client: VantageClient, input: string, q: PriceQ
   }
   if (sizes.length === 0) {
     const shown = q.variant ?? DEFAULT_VARIANT[service];
+    const union = (lists: string[][]) => [...new Set(lists.flat())].sort().join(", ");
+    const inRegion = instances.filter((raw) => regionsOf(raw).includes(region));
+    const variants = union(inRegion.map((raw) => variantsOf(service, raw, region)));
+    const hint =
+      inRegion.length === 0
+        ? ` Regiones disponibles: ${union(instances.map(regionsOf))}.`
+        : variants
+          ? ` Variantes con precio: ${variants}.`
+          : "";
     throw new NotFoundError(
-      `Ningún tamaño de ${family} (${service}) tiene precio en ${region}${shown ? ` (${shown})` : ""}.`,
+      `Ningún tamaño de ${family} (${service}) tiene precio en ${region}${shown ? ` (${shown})` : ""}.${hint}`,
     );
   }
   sizes.sort((a, b) => a.hourly - b.hourly);

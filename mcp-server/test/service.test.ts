@@ -105,9 +105,15 @@ describe("listFamily", () => {
     expect(l.sizes.map((s) => s.instance_type)).toEqual(["db.m6g.large"]);
   });
 
-  it("ningún tamaño con precio → NotFoundError", async () => {
+  it("región ausente en todos los tamaños → NotFoundError con regiones disponibles", async () => {
     await expect(listFamily(client(), "m6a", { region: "sa-east-1" })).rejects.toThrow(
-      new NotFoundError("Ningún tamaño de m6a (ec2) tiene precio en sa-east-1 (linux)."),
+      new NotFoundError("Ningún tamaño de m6a (ec2) tiene precio en sa-east-1 (linux). Regiones disponibles: eu-west-1, us-east-1."),
+    );
+  });
+
+  it("variante sin precio en ningún tamaño → NotFoundError con variantes con precio", async () => {
+    await expect(listFamily(client(), "m6a", { variant: "dedicated" })).rejects.toThrow(
+      new NotFoundError("Ningún tamaño de m6a (ec2) tiene precio en us-east-1 (dedicated). Variantes con precio: linux, mswin."),
     );
   });
 });
