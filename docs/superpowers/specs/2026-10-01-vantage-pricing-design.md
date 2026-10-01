@@ -1,7 +1,7 @@
 # Vantage Pricing — Diseño
 
 **Fecha:** 2026-10-01
-**Estado:** aprobado en conversación, pendiente de revisión escrita
+**Estado:** aprobado; revisado 2026-10-01 tras verificar Kiro, RDS y URLs (ver "Cambios tras verificación")
 
 ## Objetivo
 
@@ -27,7 +27,7 @@ Dar a agentes de código (Claude Code y Kiro, por igual) acceso a precios aproxi
 
 | Decisión | Elección | Razón |
 |---|---|---|
-| Forma | Servidor MCP + skill/steering delgada | MCP es el mecanismo común a Claude Code y Kiro; la lógica vive en un solo lugar |
+| Forma | Servidor MCP + un `SKILL.md` compartido | MCP y el estándar Agent Skills (`SKILL.md`) los soportan Claude Code y Kiro; la lógica vive en un solo lugar |
 | Runtime | TypeScript, Node 18+ | SDK MCP maduro; existe cliente oficial de Vantage |
 | Distribución | Local (`node <ruta>/dist/index.js`) | Iteración rápida; npm queda como paso posterior opcional |
 | Fuente de datos | Endpoint de familia sin autenticación | Documentado como público; una llamada trae todos los tamaños |
@@ -42,15 +42,17 @@ vantage/
 │   ├── tsconfig.json
 │   ├── src/
 │   │   ├── pricing/            # lógica pura, sin dependencia de MCP
-│   │   │   ├── vantage.ts      # fetch + caché en memoria
+│   │   │   ├── errors.ts       # PricingError y subclases
+│   │   ├── vantage.ts      # fetch + caché en memoria
 │   │   │   ├── parse.ts        # tipo de instancia → { service, family }
-│   │   │   └── price.ts        # normalización de precios y specs
-│   │   └── index.ts            # servidor MCP stdio, registra las tools
+│   │   │   ├── price.ts        # normalización de precios y specs
+│   │   └── service.ts      # orquestación de las dos consultas
+│   ├── src/server.ts           # crea el McpServer y registra las tools
+│   └── src/index.ts            # entrada stdio
 │   └── test/
 │       ├── fixtures/           # respuestas reales recortadas por servicio
 │       └── *.test.ts
-├── skill/vantage-pricing/SKILL.md
-├── kiro/steering/vantage-pricing.md
+├── skill/vantage-pricing/SKILL.md   # mismo archivo para Claude Code y Kiro
 └── README.md                   # instalación en Claude Code y Kiro
 ```
 
@@ -67,8 +69,8 @@ vantage/
 
 | Servicio | Ruta del precio | Variantes | Reserved disponible |
 |---|---|---|---|
-| ec2 | `pricing[region][os]` | `linux`, `mswin`, `rhel`, `sles`, `ubuntu`, … | Standard, Convertible, InstanceSavings, Savings |
-| rds | `pricing[region][engine]` | `MySQL`, `PostgreSQL`, `MariaDB` (+ claves numéricas) | Standard |
+| ec2 | `pricing[region][os]` | `linux`, `mswin`, `rhel`, `sles`, `ubuntu`, `dedicated`, … (se excluyen claves sin `ondemand`, como los recargos `emr` y `eks_auto_mode`) | Standard, Convertible, InstanceSavings, Savings |
+| rds | `pricing[region][engine]` | `MySQL`, `PostgreSQL`, `MariaDB`, `Oracle`, `SQL Server` (se excluyen claves numéricas —códigos internos de Vantage— y las que contienen "Outpost") | Standard (a veces falta `noUpfront` a 3 años) |
 | cache | `pricing[region][engine]` | `Redis`, `Memcached` | Standard |
 | opensearch | `pricing[region]` | ninguna | Standard |
 | redshift | `pricing[region]` | ninguna | Standard |
@@ -79,11 +81,11 @@ Specs: EC2 usa `vCPU` y `memory`; el resto `vcpu` y `memory`, a veces como strin
 
 ### Caché
 
-`Map` en memoria keyed por `service/family`, TTL 3 h. Reloj y `fetch` inyectables para pruebas. Sin persistencia.
+`Map` en memoria keyed por `service/family`, TTL 3 h. Guarda la promesa, así dos consultas simultáneas a la misma familia hacen una sola petición; los errores no se cachean. Reloj y `fetch` inyectables para pruebas. Sin persistencia.
 
 ## Inferencia de servicio y familia
 
-Reglas en orden; `service` explícito siempre las sobrescribe:
+La entrada se normaliza con `trim()` y minúsculas. Reglas en orden; `service` explícito siempre las sobrescribe:
 
 | Patrón | Servicio | Familia |
 |---|---|---|
@@ -103,7 +105,7 @@ Reglas en orden; `service` explícito siempre las sobrescribe:
 |---|---|---|
 | `instance_types` | `string[]`, 1–10 | requerido |
 | `region` | `string` | `us-east-1` |
-| `variant` | `string` | ec2 `linux`; rds `PostgreSQL`; cache `Redis`; ignorado en opensearch/redshift |
+| `variant` | `string` | ec2 `linux`; rds `PostgreSQL`; cache `Redis`; ignorado en opensearch/redshift. Comparación sin distinguir mayúsculas; la salida usa el nombre canónico |
 | `service` | `ec2 \| rds \| cache \| opensearch \| redshift` | inferido |
 
 Salida (texto JSON, un objeto por instancia en un array `results`):
@@ -126,9 +128,10 @@ Salida (texto JSON, un objeto por instancia en un array `results`):
 }
 ```
 
-- `reserved` incluye `1yr_no_upfront` y `3yr_no_upfront` (Standard) en todos los servicios, y `1yr_savings_plan_no_upfront` (clave `yrTerm1Savings.noUpfront`) solo en EC2. Claves ausentes en los datos se omiten.
+- `reserved` incluye un precio Standard a 1 año y otro a 3 años en todos los servicios, y un Savings Plan a 1 año (`yrTerm1Savings.*`) solo en EC2. Para cada plazo se usa la primera opción disponible en este orden: `noUpfront`, `partialUpfront`, `allUpfront`; la clave de salida la refleja (`1yr_no_upfront`, `3yr_partial_upfront`, `1yr_savings_plan_no_upfront`, …). Plazos sin ninguna opción se omiten.
+- Un precio vacío, no numérico o ≤ 0 se trata como ausente.
 - `savings_pct` = redondeo entero de `(1 − reserved/on_demand) × 100`.
-- `source_url`: `https://instances.vantage.sh/aws/{segmento}/{instance_type}` con segmento `ec2`, `rds`, `elasticache`, `opensearch`, `redshift`. Verificar el segmento real de cada servicio no-EC2 durante la implementación.
+- `source_url`: `https://instances.vantage.sh/aws/{segmento}/{instance_type}` con segmento `ec2`, `rds`, `elasticache` (para `cache`), `opensearch`, `redshift` (verificados, HTTP 200).
 
 ### `list_family`
 
@@ -161,12 +164,12 @@ Las tools devuelven `isError: true` con un mensaje accionable. Nunca se fabrica 
 
 En `get_instance_price` con varios tipos, un fallo individual se reporta como `{ instance_type, error }` dentro de `results`; la llamada solo es `isError` si fallan todos.
 
-## Skill y steering
+## Skill
 
-Mismo cuerpo en ambos archivos; solo cambia el frontmatter.
+Un único `skill/vantage-pricing/SKILL.md` (estándar Agent Skills) para los dos clientes:
 
-- `skill/vantage-pricing/SKILL.md`: `name: vantage-pricing`, `description` que dispara ante preguntas de costo/precio de instancias EC2, RDS, ElastiCache, OpenSearch o Redshift, comparación de tipos por precio o estimación mensual.
-- `kiro/steering/vantage-pricing.md`: frontmatter con inclusión automática por descripción. Confirmar la sintaxis exacta de Kiro durante la implementación; si Kiro no soporta inclusión por descripción, usar `inclusion: always`.
+- Frontmatter: `name: vantage-pricing` (igual al nombre de la carpeta) y `description` (≤ 1024 caracteres) que dispara ante preguntas de costo/precio de instancias EC2, RDS, ElastiCache, OpenSearch o Redshift, comparación de tipos por precio o estimación mensual.
+- Instalación: la carpeta se enlaza (junction en Windows) en `~/.claude/skills/vantage-pricing` y `~/.kiro/skills/vantage-pricing`.
 
 El cuerpo (≈60 líneas) instruye:
 
@@ -181,16 +184,16 @@ El cuerpo (≈60 líneas) instruye:
 1. **Unitarias (vitest) sobre `pricing/`:** tabla de inferencia; extracción y normalización con fixtures de los 5 servicios; región/variante faltante; caché con TTL usando `fetch` y reloj inyectados.
 2. **Integración MCP:** levantar el servidor con el cliente del SDK; verificar `tools/list` y una llamada a `get_instance_price` con `fetch` respaldado por fixtures.
 3. **Smoke en vivo** (solo con `LIVE=1`): `m6a.xlarge` en `us-east-1` devuelve `on_demand.hourly > 0`.
-4. **Sincronía de documentos:** test que compara el cuerpo de `SKILL.md` y del steering (sin frontmatter) y falla si difieren.
-5. **Prueba de la skill** (proceso de `writing-skills`): con y sin la skill, preguntar "¿cuánto cuesta un m6a.xlarge al mes?"; con la skill debe invocarse la tool e incluirse las advertencias.
+4. **Prueba de la skill** (proceso de `writing-skills`): con y sin la skill, preguntar "¿cuánto cuesta un m6a.xlarge al mes?"; con la skill debe invocarse la tool e incluirse las advertencias.
 
 ## Criterio de éxito
 
 En Claude Code y en Kiro, "¿cuánto cuesta un m6a.xlarge al mes?" responde ≈ $126.14/mes on-demand (coincide con instances.vantage.sh), muestra opciones reserved y las advertencias.
 
-## Puntos a verificar en implementación
+## Cambios tras verificación (2026-10-01)
 
-- Significado de las claves numéricas de RDS (`2`, `14`, `18`); hasta saberlo, se excluyen de `available_variants`.
-- Segmento de URL de instances.vantage.sh para servicios no-EC2.
-- Sintaxis de inclusión automática en steering de Kiro.
-- Ubicación de configuración MCP en Kiro (`.kiro/settings/mcp.json` a nivel workspace y/o usuario).
+- Kiro soporta el estándar Agent Skills (`.kiro/skills/`, `~/.kiro/skills/`): se elimina el steering duplicado y su test de sincronía; un solo `SKILL.md`.
+- RDS: las claves numéricas son códigos internos de Vantage; se excluyen junto con las variantes "Outpost".
+- RDS no siempre trae `noUpfront` a 3 años: se agrega la cadena de respaldo `noUpfront` → `partialUpfront` → `allUpfront`.
+- Segmentos de `source_url` verificados.
+- Configuración MCP de Kiro: `~/.kiro/settings/mcp.json` (usuario) o `.kiro/settings/mcp.json` (workspace), formato `mcpServers` con `command`/`args`.
