@@ -11,15 +11,17 @@ Node.js ≥ 18 para usarlo (≥ 22.12 para correr los tests) y git.
 
 ## Instalar el servidor MCP
 
-Se ejecuta directo desde GitHub con `npx`; la primera vez compila (unos segundos) y luego queda en caché.
+Se ejecuta directo desde GitHub con `npx`. La primera vez clona, instala y compila (~20 s); después arranca desde la caché (~5 s).
+
+npm 12+ bloquea por defecto los paquetes de git (`EALLOWGIT`); `--allow-git=root` lo permite solo para este paquete, no para dependencias transitivas.
 
 **Claude Code:**
 
 ```bash
 # macOS / Linux
-claude mcp add vantage-pricing --scope user -- npx -y github:marr-cloud/vantage-pricing
-# Windows
-claude mcp add vantage-pricing --scope user -- cmd /c npx -y github:marr-cloud/vantage-pricing
+claude mcp add vantage-pricing --scope user -- npx -y --allow-git=root github:marr-cloud/vantage-pricing
+# Windows (PowerShell o cmd; en Git Bash anteponer MSYS_NO_PATHCONV=1 para que no convierta /c)
+claude mcp add vantage-pricing --scope user -- cmd /c npx -y --allow-git=root github:marr-cloud/vantage-pricing
 ```
 
 **Kiro** — agregar a `~/.kiro/settings/mcp.json` (o `.kiro/settings/mcp.json` del workspace):
@@ -29,14 +31,14 @@ claude mcp add vantage-pricing --scope user -- cmd /c npx -y github:marr-cloud/v
   "mcpServers": {
     "vantage-pricing": {
       "command": "npx",
-      "args": ["-y", "github:marr-cloud/vantage-pricing"],
+      "args": ["-y", "--allow-git=root", "github:marr-cloud/vantage-pricing"],
       "autoApprove": ["get_instance_price", "list_family"]
     }
   }
 }
 ```
 
-En Windows, si Kiro no encuentra `npx`, usar `"command": "cmd"` y `"args": ["/c", "npx", "-y", "github:marr-cloud/vantage-pricing"]`.
+En Windows usar `"command": "cmd"` y `"args": ["/c", "npx", "-y", "--allow-git=root", "github:marr-cloud/vantage-pricing"]`.
 
 Para tomar una versión nueva del repo, borrar la caché de npx (`~/.npm/_npx`; en Windows `%LocalAppData%\npm-cache\_npx`) y reiniciar el cliente.
 
