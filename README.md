@@ -2,58 +2,74 @@
 
 Precios de lista aproximados de instancias AWS (EC2, RDS, ElastiCache, OpenSearch, Redshift) para Claude Code y Kiro, usando la API pública de [Vantage](https://instances.vantage.sh). No requiere API key.
 
-- `mcp-server/` — servidor MCP (stdio) con las tools `get_instance_price` y `list_family`.
+- `src/` — servidor MCP (stdio) con las tools `get_instance_price` y `list_family`.
 - `skill/vantage-pricing/SKILL.md` — skill (estándar Agent Skills) que indica al agente cuándo y cómo usarlas.
 
 ## Requisitos
 
-Node.js ≥ 18.
+Node.js ≥ 18 para usarlo (≥ 22.12 para correr los tests) y git.
 
-## Build
+## Instalar el servidor MCP
 
-```bash
-cd mcp-server
-npm install
-npm run build
-npm test            # unit + integración con fixtures
-LIVE=1 npx vitest run test/live.test.ts   # smoke contra la API real
-```
+Se ejecuta directo desde GitHub con `npx`; la primera vez compila (unos segundos) y luego queda en caché.
 
-## Instalar en Claude Code
+**Claude Code:**
 
 ```bash
-claude mcp add vantage-pricing --scope user -- node <ruta-absoluta>/mcp-server/dist/index.js
+# macOS / Linux
+claude mcp add vantage-pricing --scope user -- npx -y github:marr-cloud/vantage-pricing
+# Windows
+claude mcp add vantage-pricing --scope user -- cmd /c npx -y github:marr-cloud/vantage-pricing
 ```
 
-Skill (junction en Windows, sin admin):
-
-```powershell
-New-Item -ItemType Junction -Path "$HOME\.claude\skills\vantage-pricing" -Target "<ruta-absoluta>\skill\vantage-pricing"
-```
-
-macOS/Linux: `ln -s <ruta-absoluta>/skill/vantage-pricing ~/.claude/skills/vantage-pricing`
-
-## Instalar en Kiro
-
-Agregar a `~/.kiro/settings/mcp.json` (o `.kiro/settings/mcp.json` del workspace):
+**Kiro** — agregar a `~/.kiro/settings/mcp.json` (o `.kiro/settings/mcp.json` del workspace):
 
 ```json
 {
   "mcpServers": {
     "vantage-pricing": {
-      "command": "node",
-      "args": ["<ruta-absoluta>/mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "github:marr-cloud/vantage-pricing"],
       "autoApprove": ["get_instance_price", "list_family"]
     }
   }
 }
 ```
 
-Skill:
+En Windows, si Kiro no encuentra `npx`, usar `"command": "cmd"` y `"args": ["/c", "npx", "-y", "github:marr-cloud/vantage-pricing"]`.
+
+Para tomar una versión nueva del repo, borrar la caché de npx (`~/.npm/_npx`; en Windows `%LocalAppData%\npm-cache\_npx`) y reiniciar el cliente.
+
+## Instalar la skill
+
+```bash
+git clone https://github.com/marr-cloud/vantage-pricing.git
+```
+
+Enlazar `skill/vantage-pricing` en el directorio de skills de cada cliente:
 
 ```powershell
-New-Item -ItemType Junction -Path "$HOME\.kiro\skills\vantage-pricing" -Target "<ruta-absoluta>\skill\vantage-pricing"
+# Windows (junction, sin admin)
+New-Item -ItemType Junction -Path "$HOME\.claude\skills\vantage-pricing" -Target "<clon>\skill\vantage-pricing"
+New-Item -ItemType Junction -Path "$HOME\.kiro\skills\vantage-pricing" -Target "<clon>\skill\vantage-pricing"
 ```
+
+```bash
+# macOS / Linux
+ln -s <clon>/skill/vantage-pricing ~/.claude/skills/vantage-pricing
+ln -s <clon>/skill/vantage-pricing ~/.kiro/skills/vantage-pricing
+```
+
+## Desarrollo
+
+```bash
+npm install          # también compila (prepare)
+npm test             # unit + integración con fixtures
+LIVE=1 npx vitest run test/live.test.ts   # smoke contra la API real
+npm run build
+```
+
+Para probar cambios locales sin pasar por GitHub, registrar el servidor con `node <clon>/dist/index.js`.
 
 ## Alcance y límites
 

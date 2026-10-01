@@ -197,3 +197,4 @@ En Claude Code y en Kiro, "¿cuánto cuesta un m6a.xlarge al mes?" responde ≈ 
 - RDS no siempre trae `noUpfront` a 3 años: se agrega la cadena de respaldo `noUpfront` → `partialUpfront` → `allUpfront`.
 - Segmentos de `source_url` verificados.
 - Configuración MCP de Kiro: `~/.kiro/settings/mcp.json` (usuario) o `.kiro/settings/mcp.json` (workspace), formato `mcpServers` con `command`/`args`.
+- 2026-10-01 (publicación): el paquete del servidor se movió de `mcp-server/` a la raíz del repo (`src/`, `test/`, `package.json` con `prepare: tsc`) para poder ejecutarlo con `npx -y github:marr-cloud/vantage-pricing`.

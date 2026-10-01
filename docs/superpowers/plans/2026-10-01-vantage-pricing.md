@@ -21,7 +21,7 @@
 - Mensajes de error y textos de las tools en español. Identificadores de código en inglés.
 - Nunca se fabrica un precio: si falta un dato se devuelve error accionable.
 - `package.json` con `"type": "module"` y `"engines": { "node": ">=18" }`.
-- Comandos de shell del plan en Git Bash (POSIX). Rutas absolutas del repo: `C:/Users/maurr/workspace/skills/vantage`.
+- Comandos de shell del plan en Git Bash (POSIX). Rutas absolutas del repo: `<repo>`.
 
 ## Review Focus
 
@@ -74,8 +74,8 @@
 - [ ] **Step 1: Crear el proyecto e instalar dependencias**
 
 ```bash
-mkdir -p /c/Users/maurr/workspace/skills/vantage/mcp-server/src/pricing /c/Users/maurr/workspace/skills/vantage/mcp-server/test/fixtures
-cd /c/Users/maurr/workspace/skills/vantage/mcp-server
+mkdir -p <repo>/mcp-server/src/pricing <repo>/mcp-server/test/fixtures
+cd <repo>/mcp-server
 cat > package.json <<'EOF'
 {
   "name": "vantage-pricing-mcp",
@@ -227,7 +227,7 @@ describe("parseFamily", () => {
 
 - [ ] **Step 4: Ejecutar y verificar que falla**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/parse.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/parse.test.ts`
 Expected: FAIL — `Failed to load url ../src/pricing/parse.js` (el módulo no existe).
 
 - [ ] **Step 5: Implementar `parse.ts`**
@@ -290,13 +290,13 @@ export function parseFamily(input: string, service?: Service): Omit<ParsedName, 
 
 - [ ] **Step 6: Ejecutar y verificar que pasa; compilar**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/parse.test.ts && npx tsc --noEmit`
+Run: `cd <repo>/mcp-server && npx vitest run test/parse.test.ts && npx tsc --noEmit`
 Expected: todos los tests PASS; `tsc` sin salida.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add mcp-server/package.json mcp-server/package-lock.json mcp-server/tsconfig.json mcp-server/src mcp-server/test/parse.test.ts
 git commit -m "feat(mcp): scaffold project and instance name parsing"
 ```
@@ -585,7 +585,7 @@ describe("VantageClient.getFamily", () => {
 
 - [ ] **Step 4: Ejecutar y verificar que falla**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/vantage.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/vantage.test.ts`
 Expected: FAIL — no se puede cargar `../src/pricing/vantage.js`.
 
 - [ ] **Step 5: Implementar `vantage.ts`**
@@ -665,13 +665,13 @@ export class VantageClient {
 
 - [ ] **Step 6: Ejecutar y verificar que pasa**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run && npx tsc --noEmit`
+Run: `cd <repo>/mcp-server && npx vitest run && npx tsc --noEmit`
 Expected: todos PASS; `tsc` sin salida.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add mcp-server/src/pricing/vantage.ts mcp-server/test/helpers.ts mcp-server/test/fixtures mcp-server/test/vantage.test.ts
 git commit -m "feat(mcp): Vantage family client with in-memory cache"
 ```
@@ -822,7 +822,7 @@ describe("reservedSummary", () => {
 
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/price.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/price.test.ts`
 Expected: FAIL — no se puede cargar `../src/pricing/price.js`.
 
 - [ ] **Step 3: Implementar `price.ts`**
@@ -958,13 +958,13 @@ export function reservedSummary(service: Service, node: PriceNode): Record<strin
 
 - [ ] **Step 4: Ejecutar y verificar que pasa**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run && npx tsc --noEmit`
+Run: `cd <repo>/mcp-server && npx vitest run && npx tsc --noEmit`
 Expected: todos PASS; `tsc` sin salida.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add mcp-server/src/pricing/price.ts mcp-server/test/price.test.ts
 git commit -m "feat(mcp): price normalization with reserved fallback"
 ```
@@ -1113,7 +1113,7 @@ describe("listFamily", () => {
 
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/service.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/service.test.ts`
 Expected: FAIL — no se puede cargar `../src/pricing/service.js`.
 
 - [ ] **Step 3: Implementar `service.ts`**
@@ -1255,13 +1255,13 @@ export async function listFamily(client: VantageClient, input: string, q: PriceQ
 
 - [ ] **Step 4: Ejecutar y verificar que pasa**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run && npx tsc --noEmit`
+Run: `cd <repo>/mcp-server && npx vitest run && npx tsc --noEmit`
 Expected: todos PASS; `tsc` sin salida.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add mcp-server/src/pricing/service.ts mcp-server/test/service.test.ts
 git commit -m "feat(mcp): instance price and family listing queries"
 ```
@@ -1339,7 +1339,7 @@ describe("MCP server", () => {
 
 - [ ] **Step 2: Ejecutar y verificar que falla**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/server.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/server.test.ts`
 Expected: FAIL — no se puede cargar `../src/server.js`.
 
 - [ ] **Step 3: Implementar `server.ts` e `index.ts`**
@@ -1435,7 +1435,7 @@ await createServer().connect(new StdioServerTransport());
 
 - [ ] **Step 4: Ejecutar y verificar que pasa**
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run && npx tsc --noEmit`
+Run: `cd <repo>/mcp-server && npx vitest run && npx tsc --noEmit`
 Expected: todos PASS; `tsc` sin salida.
 
 - [ ] **Step 5: Escribir el smoke test en vivo**
@@ -1455,16 +1455,16 @@ describe.skipIf(!process.env.LIVE)("Vantage en vivo", () => {
 });
 ```
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && npx vitest run test/live.test.ts`
+Run: `cd <repo>/mcp-server && npx vitest run test/live.test.ts`
 Expected: `1 skipped`.
 
-Run: `cd /c/Users/maurr/workspace/skills/vantage/mcp-server && LIVE=1 npx vitest run test/live.test.ts`
+Run: `cd <repo>/mcp-server && LIVE=1 npx vitest run test/live.test.ts`
 Expected: `1 passed`.
 
 - [ ] **Step 6: Build y prueba stdio real**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage/mcp-server
+cd <repo>/mcp-server
 npm run build
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
@@ -1478,7 +1478,7 @@ Expected: dos líneas JSON-RPC; la segunda (`"id":2`) contiene `\"monthly\":` co
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add mcp-server/src/server.ts mcp-server/src/index.ts mcp-server/test/server.test.ts mcp-server/test/live.test.ts
 git commit -m "feat(mcp): register pricing tools over stdio"
 ```
@@ -1498,11 +1498,11 @@ git commit -m "feat(mcp): register pricing tools over stdio"
 - [ ] **Step 1: Registrar en Claude Code (scope user)**
 
 ```bash
-claude mcp add vantage-pricing --scope user -- node C:/Users/maurr/workspace/skills/vantage/mcp-server/dist/index.js
+claude mcp add vantage-pricing --scope user -- node <repo>/mcp-server/dist/index.js
 claude mcp list
 ```
 
-Expected: `vantage-pricing: node C:/Users/maurr/workspace/skills/vantage/mcp-server/dist/index.js - ✓ Connected`.
+Expected: `vantage-pricing: node <repo>/mcp-server/dist/index.js - ✓ Connected`.
 
 - [ ] **Step 2: Registrar en Kiro (nivel usuario)**
 
@@ -1513,7 +1513,7 @@ Leer `~/.kiro/settings/mcp.json` si existe. Si no existe, crearlo con el conteni
   "mcpServers": {
     "vantage-pricing": {
       "command": "node",
-      "args": ["C:/Users/maurr/workspace/skills/vantage/mcp-server/dist/index.js"],
+      "args": ["<repo>/mcp-server/dist/index.js"],
       "disabled": false,
       "autoApprove": ["get_instance_price", "list_family"]
     }
@@ -1596,7 +1596,7 @@ New-Item -ItemType Junction -Path "$HOME\.kiro\skills\vantage-pricing" -Target "
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add README.md
 git commit -m "docs: installation for Claude Code and Kiro"
 ```
@@ -1699,7 +1699,7 @@ En Kiro, con el MCP y la skill instalados, repetir el escenario 1. Expected: act
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /c/Users/maurr/workspace/skills/vantage
+cd <repo>
 git add skill/vantage-pricing/SKILL.md docs/superpowers/skill-tests/2026-10-01-vantage-pricing.md
 git commit -m "feat(skill): vantage-pricing skill for Claude Code and Kiro"
 ```
